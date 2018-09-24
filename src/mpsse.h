@@ -82,7 +82,7 @@ enum pins
 	SK	= 1,
 	DO	= 2,
 	DI	= 4,
-	CS	= 8 ,
+	CS	= 8, //the default
 	GPIO0	= 16,
 	GPIO1	= 32,
 	GPIO2	= 64,
@@ -112,7 +112,7 @@ enum i2c_ack
 };
 
 #define DEFAULT_TRIS            (SK | DO | CS | GPIO0 | GPIO1 | GPIO2 | GPIO3)  /* SK/DO/CS and GPIOs are outputs, DI is an input */
-#define DEFAULT_PORT            (SK | CS)       				/* SK and CS are high, all others low */
+#define DEFAULT_PORT            (SK | CS | GPIO0 | GPIO1) /* SK and CS are high, all others low */
 
 enum mpsse_commands
 {
@@ -170,6 +170,7 @@ struct mpsse_context
 	uint8_t txrx;
 	uint8_t tack;
 	uint8_t rack;
+  uint8_t cs_pin;
 };
 
 struct mpsse_context *MPSSE(enum modes mode, int freq, int endianess);
@@ -186,6 +187,7 @@ int GetPid(struct mpsse_context *mpsse);
 const char *GetDescription(struct mpsse_context *mpsse);
 int SetLoopback(struct mpsse_context *mpsse, int enable);
 void SetCSIdle(struct mpsse_context *mpsse, int idle);
+void SetCSPin(struct mpsse_context *mpsse, uint8_t pin);
 int Start(struct mpsse_context *mpsse);
 int Write(struct mpsse_context *mpsse, const char *data, size_t size);
 int Stop(struct mpsse_context *mpsse);

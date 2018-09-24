@@ -165,6 +165,7 @@ struct mpsse_context *OpenIndex(int vid, int pid, enum modes mode, int freq, int
 					if(mpsse->mode != BITBANG)
 					{
 						ftdi_set_bitmode(&mpsse->ftdi, 0, BITMODE_MPSSE);
+            mpsse->cs_pin = CS;
 
 						if(SetClock(mpsse, freq) == MPSSE_OK)
 						{
@@ -278,7 +279,7 @@ int SetMode(struct mpsse_context *mpsse, int endianess)
 		mpsse->pidle = mpsse->pstart = mpsse->pstop = DEFAULT_PORT;
 
 		/* During reads and writes the chip select pin is brought low */
-		mpsse->pstart &= ~CS;
+		mpsse->pstart &= ~mpsse->cs_pin;
 
 		/* Disable FTDI internal loopback */
 	        SetLoopback(mpsse, 0);
@@ -585,22 +586,40 @@ void SetCSIdle(struct mpsse_context *mpsse, int idle)
 		if(idle > 0)
 		{
 			/* Chip select idles high, active low */
-			mpsse->pidle |= CS;
-			mpsse->pstop |= CS;
-			mpsse->pstart &= ~CS;
+			mpsse->pidle |= mpsse->cs_pin;
+			mpsse->pstop |= mpsse->cs_pin;
+			mpsse->pstart &= ~mpsse->cs_pin;
 		}
 		else
 		{
 			/* Chip select idles low, active high */
-			mpsse->pidle &= ~CS;
-			mpsse->pstop &= ~CS;
-			mpsse->pstart |= CS;
+			mpsse->pidle &= ~mpsse->cs_pin;
+			mpsse->pstop &= ~mpsse->cs_pin;
+			mpsse->pstart |= mpsse->cs_pin;
 		}
 	}
 
 	return;
 }
 
+void SetCSPin(struct mpsse_context *mpsse, uint8_t pin)
+{
+
+	if(is_valid_context(mpsse))
+  {
+    // clear old CS pin
+    mpsse->pidle &= ~mpsse->cs_pin;
+    mpsse->pstop &= ~mpsse->cs_pin;
+    mpsse->pstart |= mpsse->cs_pin;
+
+    mpsse->cs_pin = pin;
+
+    /* Chip select idles high, active low */
+    mpsse->pidle |= mpsse->cs_pin;
+    mpsse->pstop |= mpsse->cs_pin;
+    mpsse->pstart &= ~mpsse->cs_pin;
+  }
+}
 /* 
  * Enables or disables flushing of the FTDI chip's RX buffers after each read operation.
  * Flushing is disable by default.
